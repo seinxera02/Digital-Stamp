@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash, Blueprint
 from datetime import datetime
 import os, sys
 
@@ -12,6 +12,13 @@ static_folder = os.path.join(base_path, "static")  # if you have static files
 
 app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
 app.secret_key = 'seiko_electric_demo_secret_key'
+
+# Create a Blueprint instance
+# The blueprint name is 'digital_stamp_bp'
+# The __name__ argument helps locate templates and static files relative to this blueprint
+digital_stamp_bp = Blueprint('digital_stamp_bp', __name__,
+                             template_folder='templates',
+                             static_folder='static')
 
 # Company data based on Seiko Electric Co. Ltd.
 COMPANY_NAME = "SEIKO ELECTRIC CO. LTD."
@@ -38,11 +45,11 @@ USERS = {
     'admin': {'department': 'Engineering Service', 'full_name': 'System Administrator', 'position': 'Admin'}
 }
 
-@app.route('/')
+@digital_stamp_bp.route('/')
 def index():
     return render_template('login.html', company=COMPANY_NAME)
 
-@app.route('/login', methods=['POST'])
+@digital_stamp_bp.route('/login', methods=['POST'])
 def login():
     username = request.form.get('username', '').strip().lower()
     
@@ -55,7 +62,7 @@ def login():
         flash('User not found. Please contact administrator or use valid credentials.', 'error')
         return render_template('login.html', company=COMPANY_NAME, available_users=USERS)
 
-@app.route('/stamp')
+@digital_stamp_bp.route('/stamp')
 def stamp():
     if 'username' not in session:
         return redirect(url_for('index'))
@@ -70,7 +77,7 @@ def stamp():
                          current_date=datetime.now().strftime('%Y-%m-%d'),
                          website=COMPANY_WEBSITE)
 
-@app.route('/admin')
+@digital_stamp_bp.route('/admin')
 def admin():
     if not session.get('is_admin', False):
         flash('Access denied. Admin privileges required.', 'error')
@@ -81,7 +88,7 @@ def admin():
                          users=USERS,
                          departments=DEPARTMENTS)
 
-@app.route('/admin/add_user', methods=['POST'])
+@digital_stamp_bp.route('/admin/add_user', methods=['POST'])
 def add_user():
     if not session.get('is_admin', False):
         return jsonify({'error': 'Access denied'}), 403
@@ -105,7 +112,7 @@ def add_user():
     
     return redirect(url_for('admin'))
 
-@app.route('/admin/edit_user', methods=['POST'])
+@digital_stamp_bp.route('/admin/edit_user', methods=['POST'])
 def edit_user():
     if not session.get('is_admin', False):
         return jsonify({'error': 'Access denied'}), 403
@@ -127,7 +134,7 @@ def edit_user():
     
     return redirect(url_for('admin'))
 
-@app.route('/admin/delete_user', methods=['POST'])
+@digital_stamp_bp.route('/admin/delete_user', methods=['POST'])
 def delete_user():
     if not session.get('is_admin', False):
         return jsonify({'error': 'Access denied'}), 403
@@ -144,7 +151,7 @@ def delete_user():
     
     return redirect(url_for('admin'))
 
-@app.route('/logout')
+@digital_stamp_bp.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('index'))
@@ -743,9 +750,13 @@ document.getElementById('deleteModal').addEventListener('click', function(e) {
     '''
 }
 
+# In digital_stamp.py
+
+# ... other code ...
+
 # Create templates directory and write template files
-def setup_templates():
-    template_dir = 'templates'
+def setup_templates(base_path):  # Add `base_path` as an argument
+    template_dir = os.path.join(base_path, 'templates')
     if not os.path.exists(template_dir):
         os.makedirs(template_dir)
     
