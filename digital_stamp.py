@@ -57,7 +57,7 @@ def login():
         session['username'] = username
         session['user_data'] = USERS[username]
         session['is_admin'] = (username == 'admin')
-        return redirect(url_for('stamp'))
+        return redirect(url_for('digital_stamp_bp.stamp'))
     else:
         flash('User not found. Please contact administrator or use valid credentials.', 'error')
         return render_template('login.html', company=COMPANY_NAME, available_users=USERS)
@@ -65,8 +65,8 @@ def login():
 @digital_stamp_bp.route('/stamp')
 def stamp():
     if 'username' not in session:
-        return redirect(url_for('index'))
-    
+        return redirect(url_for('digital_stamp_bp.index'))
+
     user_data = session.get('user_data', {})
     return render_template('stamp.html', 
                          company=COMPANY_NAME,
@@ -81,8 +81,8 @@ def stamp():
 def admin():
     if not session.get('is_admin', False):
         flash('Access denied. Admin privileges required.', 'error')
-        return redirect(url_for('index'))
-    
+        return redirect(url_for('digital_stamp_bp.index'))
+
     return render_template('admin.html', 
                          company=COMPANY_NAME,
                          users=USERS,
@@ -109,8 +109,8 @@ def add_user():
         flash(f'User {username} added successfully!', 'success')
     else:
         flash('All fields are required!', 'error')
-    
-    return redirect(url_for('admin'))
+
+    return redirect(url_for('digital_stamp_bp.admin'))
 
 @digital_stamp_bp.route('/admin/edit_user', methods=['POST'])
 def edit_user():
@@ -131,8 +131,8 @@ def edit_user():
         flash(f'User {username} updated successfully!', 'success')
     else:
         flash('User not found or invalid data!', 'error')
-    
-    return redirect(url_for('admin'))
+
+    return redirect(url_for('digital_stamp_bp.admin'))
 
 @digital_stamp_bp.route('/admin/delete_user', methods=['POST'])
 def delete_user():
@@ -148,13 +148,13 @@ def delete_user():
         flash(f'User {username} deleted successfully!', 'success')
     else:
         flash('User not found!', 'error')
-    
-    return redirect(url_for('admin'))
+
+    return redirect(url_for('digital_stamp_bp.admin'))
 
 @digital_stamp_bp.route('/logout')
 def logout():
     session.clear()
-    return redirect(url_for('index'))
+    return redirect(url_for('digital_stamp_bp.index'))
 
 # Templates as strings
 templates = {
