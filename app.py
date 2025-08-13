@@ -4,7 +4,7 @@ import os, sys
 from flask import Flask
 
 # Import the blueprint from your digital_stamp.py
-from digital_stamp import digital_stamp_bp, setup_templates
+from digital_stamp import digital_stamp_bp
 
 # Determine base path for PyInstaller
 if getattr(sys, 'frozen', False):
@@ -31,8 +31,6 @@ def start_server():
 
 # Main function to set up and run the desktop app
 def main():
-    # Ensure templates are set up (important for PyInstaller to find them)
-    setup_templates(base_path)
 
     # Start the Flask server in a separate thread
     t = threading.Thread(target=start_server)
