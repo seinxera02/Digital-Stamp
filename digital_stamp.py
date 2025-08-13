@@ -1,8 +1,16 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
 from datetime import datetime
-import os
+import os, sys
 
-app = Flask(__name__)
+if getattr(sys, 'frozen', False):
+    base_path = sys._MEIPASS  # PyInstaller temp folder
+else:
+    base_path = os.path.abspath(".")
+
+template_folder = os.path.join(base_path, "templates")
+static_folder = os.path.join(base_path, "static")  # if you have static files
+
+app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
 app.secret_key = 'seiko_electric_demo_secret_key'
 
 # Company data based on Seiko Electric Co. Ltd.
