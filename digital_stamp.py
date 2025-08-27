@@ -2,23 +2,8 @@ from flask import Flask, render_template, request, redirect, url_for, session, j
 from datetime import datetime
 import os, sys
 
-if getattr(sys, 'frozen', False):
-    base_path = sys._MEIPASS  # PyInstaller temp folder
-else:
-    base_path = os.path.abspath(".")
-
-template_folder = os.path.join(base_path, "templates")
-static_folder = os.path.join(base_path, "static")  # if you have static files
-
-app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
+app = Flask(__name__)
 app.secret_key = 'seiko_electric_demo_secret_key'
-
-# Create a Blueprint instance
-# The blueprint name is 'digital_stamp_bp'
-# The __name__ argument helps locate templates and static files relative to this blueprint
-digital_stamp_bp = Blueprint('digital_stamp_bp', __name__,
-                             template_folder='templates',
-                             static_folder='static')
 
 # Company data based on Seiko Electric Co. Ltd.
 COMPANY_NAME = "SEIKO ELECTRIC CO. LTD."
@@ -45,11 +30,11 @@ USERS = {
     'admin': {'department': 'Engineering Service', 'full_name': 'System Administrator', 'position': 'Admin'}
 }
 
-@digital_stamp_bp.route('/')
+@app.route('/')
 def index():
     return render_template('login.html', company=COMPANY_NAME)
 
-@digital_stamp_bp.route('/login', methods=['POST'])
+@app.route('/login', methods=['POST'])
 def login():
     username = request.form.get('username', '').strip().lower()
     
@@ -57,15 +42,15 @@ def login():
         session['username'] = username
         session['user_data'] = USERS[username]
         session['is_admin'] = (username == 'admin')
-        return redirect(url_for('digital_stamp_bp.stamp'))
+        return redirect(url_for('stamp'))
     else:
         flash('User not found. Please contact administrator or use valid credentials.', 'error')
         return render_template('login.html', company=COMPANY_NAME, available_users=USERS)
 
-@digital_stamp_bp.route('/stamp')
+@app.route('/stamp')
 def stamp():
     if 'username' not in session:
-        return redirect(url_for('digital_stamp_bp.index'))
+        return redirect(url_for('index'))
 
     user_data = session.get('user_data', {})
     return render_template('stamp.html', 
@@ -77,18 +62,18 @@ def stamp():
                          current_date=datetime.now().strftime('%Y-%m-%d'),
                          website=COMPANY_WEBSITE)
 
-@digital_stamp_bp.route('/admin')
+@app.route('/admin')
 def admin():
     if not session.get('is_admin', False):
         flash('Access denied. Admin privileges required.', 'error')
-        return redirect(url_for('digital_stamp_bp.index'))
+        return redirect(url_for('index'))
 
     return render_template('admin.html', 
                          company=COMPANY_NAME,
                          users=USERS,
                          departments=DEPARTMENTS)
 
-@digital_stamp_bp.route('/admin/add_user', methods=['POST'])
+@app.route('/admin/add_user', methods=['POST'])
 def add_user():
     if not session.get('is_admin', False):
         return jsonify({'error': 'Access denied'}), 403
@@ -110,9 +95,9 @@ def add_user():
     else:
         flash('All fields are required!', 'error')
 
-    return redirect(url_for('digital_stamp_bp.admin'))
+    return redirect(url_for('admin'))
 
-@digital_stamp_bp.route('/admin/edit_user', methods=['POST'])
+@app.route('/admin/edit_user', methods=['POST'])
 def edit_user():
     if not session.get('is_admin', False):
         return jsonify({'error': 'Access denied'}), 403
@@ -132,9 +117,9 @@ def edit_user():
     else:
         flash('User not found or invalid data!', 'error')
 
-    return redirect(url_for('digital_stamp_bp.admin'))
+    return redirect(url_for('admin'))
 
-@digital_stamp_bp.route('/admin/delete_user', methods=['POST'])
+@app.route('/admin/delete_user', methods=['POST'])
 def delete_user():
     if not session.get('is_admin', False):
         return jsonify({'error': 'Access denied'}), 403
@@ -149,12 +134,12 @@ def delete_user():
     else:
         flash('User not found!', 'error')
 
-    return redirect(url_for('digital_stamp_bp.admin'))
+    return redirect(url_for('admin'))
 
-@digital_stamp_bp.route('/logout')
+@app.route('/logout')
 def logout():
     session.clear()
-    return redirect(url_for('digital_stamp_bp.index'))
+    return redirect(url_for('index'))
 
 
 if __name__ == '__main__':
